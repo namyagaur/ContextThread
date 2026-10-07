@@ -1,0 +1,5 @@
+Retrieval-Augmented Generation
+
+Retrieval-Augmented Generation combines information retrieval with language generation. Instead of relying only on information stored in a language model's parameters, a RAG system retrieves relevant external information and provides it to the model as context.
+
+A typical RAG pipeline contains document ingestion, chunking, embedding, retrieval, context construction, and generation.
