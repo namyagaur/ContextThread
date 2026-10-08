@@ -1,0 +1,25 @@
+from sentence_transformers import CrossEncoder
+
+
+class Reranker:
+
+    def __init__(self):
+        self.model = CrossEncoder(
+            "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        )
+
+    def rerank(self, query, chunks, top_k=5):
+        pairs = [
+            [query, chunk.text]
+            for chunk in chunks
+        ]
+
+        scores = self.model.predict(pairs)
+
+        ranked = sorted(
+            zip(scores, chunks),
+            key=lambda x: x[0],
+            reverse=True
+        )
+
+        return ranked[:top_k]

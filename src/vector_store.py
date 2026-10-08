@@ -13,7 +13,7 @@ class VectorStore:
         )
 
     def add(self, chunk, vector, document):
-        self.collection.add(
+        self.collection.upsert(
             ids=[chunk.id],
             embeddings=[vector.tolist()],
             documents=[chunk.text],
