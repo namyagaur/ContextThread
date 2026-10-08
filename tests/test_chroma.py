@@ -13,7 +13,7 @@ store = VectorStore()
 
 for chunk in chunks:
     vector = embedder.embed(chunk.text)
-    store.add(chunk, vector)
+    store.add(chunk, vector, document)
 
 print(f"Indexed {len(chunks)} chunks.")
 
@@ -22,7 +22,11 @@ query = "What can Python be used for?"
 
 query_vector = embedder.embed(query)
 
-results = store.search(query_vector, top_k=3)
+results = store.search(
+    query_vector,
+    top_k=3,
+    where={"date": "unknown"}
+)
 
 print("\nRESULTS")
 
