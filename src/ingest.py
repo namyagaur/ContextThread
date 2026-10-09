@@ -4,7 +4,6 @@ from src.chunker import chunk_document
 from src.embedder import Embedder
 from src.vector_store import VectorStore
 
-
 def ingest_pdf(file_path):
     document = load_pdf(file_path)
 
@@ -14,6 +13,9 @@ def ingest_pdf(file_path):
     chunks = chunk_document(document)
     embedder = Embedder()
     store = VectorStore()
+
+    # Remove old chunks before indexing the updated document.
+    store.delete_document(document.id)
 
     for chunk in chunks:
         vector = embedder.embed(chunk.text)

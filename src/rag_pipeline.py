@@ -38,10 +38,6 @@ class RAGPipeline:
         self.embedder = Embedder()
         self.store = VectorStore()
 
-        for chunk in self.chunks:
-            vector = self.embedder.embed(chunk.text)
-            self.store.add(chunk, vector, self.document)
-
         semantic = SemanticRetriever(self.store, self.chunks)
         lexical = LexicalRetriever(self.chunks)
 

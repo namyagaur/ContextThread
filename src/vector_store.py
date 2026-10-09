@@ -34,3 +34,8 @@ class VectorStore:
             n_results=top_k,
             where=where
         )
+
+    def delete_document(self, document_id):
+        self.collection.delete(
+            where={"document_id": document_id}
+        )
