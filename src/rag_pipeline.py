@@ -6,7 +6,7 @@ from src.lexical_retriever import LexicalRetriever
 from src.hybrid_retriever import HybridRetriever
 from src.reranker import Reranker
 from src.context_builder import ContextBuilder
-
+from src.generator import Generator
 
 class SemanticRetriever:
 
@@ -28,46 +28,29 @@ class SemanticRetriever:
         ]
 
 
+
 class RAGPipeline:
 
     def __init__(self, document_path):
-
         self.document = load_pdf(document_path)
-
         self.chunks = chunk_document(self.document)
 
         self.embedder = Embedder()
-
         self.store = VectorStore()
 
         for chunk in self.chunks:
             vector = self.embedder.embed(chunk.text)
-            self.store.add(
-                chunk,
-                vector,
-                self.document
-            )
+            self.store.add(chunk, vector, self.document)
 
-        semantic = SemanticRetriever(
-            self.store,
-            self.chunks
-        )
+        semantic = SemanticRetriever(self.store, self.chunks)
+        lexical = LexicalRetriever(self.chunks)
 
-        lexical = LexicalRetriever(
-            self.chunks
-        )
-
-        self.hybrid = HybridRetriever(
-            semantic,
-            lexical
-        )
-
+        self.hybrid = HybridRetriever(semantic, lexical)
         self.reranker = Reranker()
-
         self.context_builder = ContextBuilder()
+        self.generator = Generator()
 
     def retrieve(self, query):
-
         query_vector = self.embedder.embed(query)
 
         candidates = self.hybrid.search(
@@ -77,8 +60,7 @@ class RAGPipeline:
         )
 
         candidate_chunks = [
-            chunk
-            for _, chunk in candidates
+            chunk for _, chunk in candidates
         ]
 
         reranked = self.reranker.rerank(
@@ -87,8 +69,23 @@ class RAGPipeline:
             top_k=3
         )
 
-        context = self.context_builder.build(
-            reranked
-        )
+        context = self.context_builder.build(reranked)
 
         return reranked, context
+
+    def answer(self, query):
+        results, context = self.retrieve(query)
+
+        response = self.generator.generate(query, context)
+
+        return {
+            "answer": response,
+            "sources": [
+                {
+                    "chunk_id": chunk.id,
+                    "score": float(score),
+                    "text": chunk.text
+                }
+                for score, chunk in results
+            ]
+        }
