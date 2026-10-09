@@ -1,5 +1,4 @@
-from src.pdf_loader import load_pdf
-from src.chunker import chunk_document
+
 from src.embedder import Embedder
 from src.vector_store import VectorStore
 from src.lexical_retriever import LexicalRetriever
@@ -8,37 +7,45 @@ from src.reranker import Reranker
 from src.context_builder import ContextBuilder
 from src.generator import Generator
 
+
 class SemanticRetriever:
 
     def __init__(self, store, chunks):
         self.store = store
         self.chunks = chunks
+        self.lookup = {chunk.id: chunk for chunk in chunks}
 
     def search(self, query_vector, top_k=10):
         results = self.store.search(query_vector, top_k)
 
-        lookup = {
-            chunk.id: chunk
-            for chunk in self.chunks
-        }
+        ranked = []
 
-        return [
-            (1 / (i + 1), lookup[chunk_id])
-            for i, chunk_id in enumerate(results["ids"][0])
-        ]
+        for rank, chunk_id in enumerate(results["ids"][0]):
+            chunk = self.lookup.get(chunk_id)
 
+            if chunk is not None:
+                ranked.append((1 / (rank + 1), chunk))
+
+        return ranked
 
 
 class RAGPipeline:
 
-    def __init__(self, document_path):
-        self.document = load_pdf(document_path)
-        self.chunks = chunk_document(self.document)
-
+    def __init__(self):
         self.embedder = Embedder()
         self.store = VectorStore()
 
-        semantic = SemanticRetriever(self.store, self.chunks)
+        # Load the existing index; do not re-ingest the PDF.
+        self.chunks = self.store.get_all_chunks()
+
+        if not self.chunks:
+            raise RuntimeError(
+                "Knowledge base is empty. Run ingestion first."
+            )
+
+        semantic = SemanticRetriever(
+            self.store, self.chunks
+        )
         lexical = LexicalRetriever(self.chunks)
 
         self.hybrid = HybridRetriever(semantic, lexical)
@@ -50,9 +57,7 @@ class RAGPipeline:
         query_vector = self.embedder.embed(query)
 
         candidates = self.hybrid.search(
-            query,
-            query_vector,
-            top_k=10
+            query, query_vector, top_k=10
         )
 
         candidate_chunks = [
@@ -60,9 +65,7 @@ class RAGPipeline:
         ]
 
         reranked = self.reranker.rerank(
-            query,
-            candidate_chunks,
-            top_k=3
+            query, candidate_chunks, top_k=3
         )
 
         context = self.context_builder.build(reranked)
@@ -71,7 +74,6 @@ class RAGPipeline:
 
     def answer(self, query):
         results, context = self.retrieve(query)
-
         response = self.generator.generate(query, context)
 
         return {
@@ -79,9 +81,22 @@ class RAGPipeline:
             "sources": [
                 {
                     "chunk_id": chunk.id,
+                    "source": self._source_for(chunk),
+                    "page_number": chunk.page_number,
                     "score": float(score),
                     "text": chunk.text
                 }
                 for score, chunk in results
             ]
         }
+
+    def _source_for(self, chunk):
+        records = self.store.collection.get(
+            ids=[chunk.id],
+            include=["metadatas"]
+        )
+
+        if records["metadatas"]:
+            return records["metadatas"][0].get("source")
+
+        return None

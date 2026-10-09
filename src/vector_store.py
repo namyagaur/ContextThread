@@ -1,6 +1,6 @@
 
 import chromadb
-
+from src.chunk import Chunk
 
 class VectorStore:
 
@@ -39,3 +39,27 @@ class VectorStore:
         self.collection.delete(
             where={"document_id": document_id}
         )
+
+    
+
+    def get_all_chunks(self):
+        records = self.collection.get(
+            include=["documents", "metadatas"]
+        )
+
+        chunks = []
+
+        for i, chunk_id in enumerate(records["ids"]):
+            metadata = records["metadatas"][i] or {}
+
+            chunks.append(
+                Chunk(
+                    id=chunk_id,
+                    document_id=metadata["document_id"],
+                    index=metadata["chunk_index"],
+                    text=records["documents"][i],
+                    page_number=metadata.get("page_number") or None
+                )
+            )
+
+        return chunks
