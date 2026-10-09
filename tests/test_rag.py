@@ -1,4 +1,3 @@
-
 from src.rag_pipeline import RAGPipeline
 
 pipeline = RAGPipeline()
@@ -10,10 +9,10 @@ result = pipeline.answer(
 print("\nANSWER:")
 print(result["answer"])
 
-print("\nSOURCES:")
-for source in result["sources"]:
+print("\nCITATION SOURCES:")
+for i, source in enumerate(result["sources"], start=1):
+    print(f"\n[SOURCE {i}]")
     print("Chunk:", source["chunk_id"])
-    print("File:", source["source"])
+    print("Document:", source["document_id"])
     print("Page:", source["page_number"])
-    print(source["text"][:200])
-    print()
+    print("Evidence:", source["text"][:200])

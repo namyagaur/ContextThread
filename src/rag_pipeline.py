@@ -68,27 +68,20 @@ class RAGPipeline:
             query, candidate_chunks, top_k=3
         )
 
-        context = self.context_builder.build(reranked)
+        context, source_map = self.context_builder.build(reranked)
+        return reranked, context, source_map
 
-        return reranked, context
-
+    
     def answer(self, query):
-        results, context = self.retrieve(query)
+        results, context, source_map = self.retrieve(query)
+
         response = self.generator.generate(query, context)
 
         return {
             "answer": response,
-            "sources": [
-                {
-                    "chunk_id": chunk.id,
-                    "source": self._source_for(chunk),
-                    "page_number": chunk.page_number,
-                    "score": float(score),
-                    "text": chunk.text
-                }
-                for score, chunk in results
-            ]
+            "sources": list(source_map.values())
         }
+
 
     def _source_for(self, chunk):
         records = self.store.collection.get(
