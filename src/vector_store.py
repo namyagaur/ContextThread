@@ -12,17 +12,20 @@ class VectorStore:
             name="contextthread"
         )
 
-    def add(self, chunk, vector, document):
-        self.collection.upsert(
-            ids=[chunk.id],
-            embeddings=[vector.tolist()],
-            documents=[chunk.text],
-            metadatas=[{
-                "document_id": chunk.document_id,
-                "chunk_index": chunk.index,
-                "source": document.source,
-                "date": document.date
-            }]
+    
+def add(self, chunk, vector, document):
+    self.collection.upsert(
+        ids=[chunk.id],
+        embeddings=[vector.tolist()],
+        documents=[chunk.text],
+        metadatas=[{
+            "document_id": chunk.document_id,
+            "chunk_index": chunk.index,
+            "source": document.source,
+            "title": document.title,
+            "date": document.date,
+            "page_number": chunk.page_number or 0
+        }]
     )
 
     def search(self, query_vector, top_k=5, where=None):

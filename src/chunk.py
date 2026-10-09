@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 
 
@@ -7,3 +8,4 @@ class Chunk:
     document_id: str
     index: int
     text: str
+    page_number: int | None = None
