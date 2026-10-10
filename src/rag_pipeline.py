@@ -1,4 +1,4 @@
-
+import re
 from src.embedder import Embedder
 from src.vector_store import VectorStore
 from src.lexical_retriever import LexicalRetriever
@@ -71,16 +71,34 @@ class RAGPipeline:
         context, source_map = self.context_builder.build(reranked)
         return reranked, context, source_map
 
-    
+
     def answer(self, query):
         results, context, source_map = self.retrieve(query)
-
         response = self.generator.generate(query, context)
+
+        cited_labels = set(
+            re.findall(r"\[SOURCE \d+\]", response)
+        )
+
+        valid_labels = {
+            f"[{label}]" for label in source_map
+        }
+
+        invalid_labels = cited_labels - valid_labels
+
+        if invalid_labels:
+            raise ValueError(
+                f"Invalid citation labels: {invalid_labels}"
+            )
 
         return {
             "answer": response,
-            "sources": list(source_map.values())
+            "sources": [
+                {"label": label, **source}
+                for label, source in source_map.items()
+            ]
         }
+
 
 
     def _source_for(self, chunk):
