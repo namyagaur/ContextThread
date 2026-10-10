@@ -1,3 +1,5 @@
+import re
+
 def clean_text(text):
     lines = text.splitlines()
 
@@ -15,4 +17,9 @@ def clean_text(text):
             cleaned_lines.append(line)
             previous_blank = False
 
-    return "\n".join(cleaned_lines).strip()
+    text = "\n".join(cleaned_lines).strip()
+
+    # Repair line breaks inserted inside sentences.
+    text = re.sub(r"(?<=[a-z])\n(?=[a-z])", " ", text)
+
+    return text
