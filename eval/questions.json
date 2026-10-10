@@ -1,0 +1,19 @@
+
+[
+  {
+    "query": "What is Python known for, and which libraries are used for data science?",
+    "expected_documents": ["python.pdf"]
+  },
+  {
+    "query": "What is retrieval-augmented generation, and how does retrieval support an answer?",
+    "expected_documents": ["rag.pdf"]
+  },
+  {
+    "query": "What are vector databases used for in semantic search?",
+    "expected_documents": ["vector.pdf"]
+  },
+  {
+    "query": "What are LangChain and LangGraph used for, and how do they differ?",
+    "expected_documents": ["Langchainandgraph.pdf"]
+  }
+]
