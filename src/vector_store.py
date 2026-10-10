@@ -32,7 +32,8 @@ class VectorStore:
         return self.collection.query(
             query_embeddings=[query_vector.tolist()],
             n_results=top_k,
-            where=where
+            where=where,
+            include=["documents", "metadatas", "distances"]
         )
 
     def delete_document(self, document_id):
