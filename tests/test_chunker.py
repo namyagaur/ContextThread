@@ -10,12 +10,8 @@ print("PDF pages:", len(document.pages))
 print("Total chunks:", len(chunks))
 
 for chunk in chunks:
-    print(
-        f"\nID: {chunk.id}"
-        f"\nPage: {chunk.page_number}"
-        f"\nLength: {len(chunk.text)}"
-        f"\nText: {chunk.text[:150]}"
-    )
+    print(f"\n{'=' * 20} {chunk.id} {'=' * 20}")
+    print(chunk.text)
 
 assert chunks, "No chunks were generated"
 assert all(len(c.text) >= 40 for c in chunks)
