@@ -1,4 +1,10 @@
+
+import re
 from rank_bm25 import BM25Okapi
+
+
+def tokenize(text):
+    return re.findall(r"\b[a-zA-Z0-9_+#.-]+\b", text.lower())
 
 
 class LexicalRetriever:
@@ -7,20 +13,19 @@ class LexicalRetriever:
         self.chunks = chunks
 
         tokenized_chunks = [
-            chunk.text.lower().split()
+            tokenize(chunk.text)
             for chunk in chunks
         ]
 
         self.bm25 = BM25Okapi(tokenized_chunks)
 
     def search(self, query, top_k=5):
-        query_tokens = query.lower().split()
-
+        query_tokens = tokenize(query)
         scores = self.bm25.get_scores(query_tokens)
 
         ranked = sorted(
             zip(scores, self.chunks),
-            key=lambda x: x[0],
+            key=lambda item: item[0],
             reverse=True
         )
 
